@@ -1,0 +1,58 @@
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 4em;
+  height: 4em;
+  min-width: 4em;
+  background-color: lightgray;
+  border-radius: 0.5em;
+
+  color: gray;
+
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.vote-box {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.vote-box .vote-count {
+  min-width: 1.5em;
+  border: 1px solid lightgray;
+  border-radius: 0.25em;
+  text-align: center;
+  font-weight: 600;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  padding-left: 2.5em;
+
+  border-radius: 0.5em;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 1em;
+
+  width: 1em;
+  height: 1em;
+  transform: translateY(-50%);
+
+  pointer-events: none;
+}
+
+@media (max-width: 770px) {
+  .search-container {
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,18 @@
+.tag {
+  padding: 0.25em 0.75em;
+
+  border: 1px solid lightgray;
+  border-radius: 0.5em;
+
+  font-size: 0.75em;
+  text-decoration: none;
+
+  background: whitesmoke;
+  color: blue;
+
+  transition: background 0.15s;
+}
+
+.tag:hover {
+  background: lightgray;
+}
