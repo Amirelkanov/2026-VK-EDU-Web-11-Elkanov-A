@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Questions - AskPupkin{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+  <h1 class="fs-3 mb-0">New Questions</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'questions:hot' %}" class="text-primary text-decoration-none fw-semibold text-nowrap">
+      Hot
+      <span class="d-none d-sm-inline">questions</span>
+      &rsaquo;
+    </a>
+  </div>
+</div>
+
+{% for question in questions %}
+{% include 'question_card.html' %}
+{% endfor %}
+
+{% include 'pagination.html' %}
+{% endblock %}

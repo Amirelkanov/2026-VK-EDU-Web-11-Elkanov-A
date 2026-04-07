@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - AskPupkin{% endblock %}
+
+{% block content %}
+<h1 class="fs-3 fw-bold mb-3">Registration</h1>
+
+<form method="post" action="{% url 'core:signup' %}" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+  {% csrf_token %}
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">Login</label>
+    <div class="col-sm-6">
+      <input type="text" class="form-control" name="login" placeholder="Enter your login here" />
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">Email</label>
+    <div class="col-sm-6">
+      <input type="email" class="form-control" name="email" placeholder="m@example.com" />
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">NickName</label>
+    <div class="col-sm-6">
+      <input type="text" class="form-control" name="nickname" placeholder="Enter your nickname here" />
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">Password</label>
+    <div class="col-sm-6">
+      <input type="password" class="form-control" name="password" />
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">Repeat password</label>
+    <div class="col-sm-6">
+      <input type="password" class="form-control" name="password2" />
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <label class="col-sm-4 col-form-label">Upload avatar</label>
+    <div class="col-sm-6">
+      <input type="file" class="form-control" name="avatar" accept="image/*" />
+    </div>
+  </div>
+
+  <div class="row mt-1">
+    <div class="col-sm-6 offset-sm-4">
+      <button type="submit" class="btn btn-primary">
+        Register!
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6 offset-sm-4">
+      <a href="{% url 'core:login' %}" class="text-primary">Already has an account?</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

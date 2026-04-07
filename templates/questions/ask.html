@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Ask Question - AskPupkin{% endblock %}
+
+{% block content %}
+<h1 class="fs-3 fw-bold mb-4">New Question</h1>
+
+<form method="post" action="">
+  {% csrf_token %}
+  <div class="row mb-3 align-items-start">
+    <label class="col-sm-2 col-form-label">Title</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="title" placeholder="Enter your question title" />
+    </div>
+  </div>
+
+  <div class="row mb-3 align-items-start">
+    <label class="col-sm-2 col-form-label">Text</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" name="text" rows="10" placeholder="Describe your problem in detail"></textarea>
+    </div>
+  </div>
+
+  <div class="row mb-4 align-items-start">
+    <label class="col-sm-2 col-form-label">Tags</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="tags" placeholder="e.g. python, django, web" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-10 offset-sm-2">
+      <button type="submit" class="btn btn-primary">ASK!</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

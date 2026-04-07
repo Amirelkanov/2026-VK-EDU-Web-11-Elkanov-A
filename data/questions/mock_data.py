@@ -1,0 +1,17 @@
+MOCK_TAGS = [
+    "perl",
+    "python",
+    "TechnoPark",
+    "MySQL",
+    "django",
+    "MailRu",
+    "Voloshin",
+    "Firefox",
+    "JavaScript",
+    "HTML",
+    "CSS",
+    "Linux",
+    "Git",
+    "Docker",
+    "React",
+]
