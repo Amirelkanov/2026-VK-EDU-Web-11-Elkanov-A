@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Questions tagged "{{ tag }}" - AskPupkin{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+  <h1 class="fs-3 mb-0">Questions tagged "{{ tag }}"</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'questions:index' %}" class="btn btn-outline-primary">New</a>
+    <a href="{% url 'questions:hot' %}" class="btn btn-outline-primary">Hot</a>
+  </div>
+</div>
+
+{% for question in questions %}
+{% include 'question_card.html' %}
+{% endfor %}
+
+{% include 'pagination.html' %}
+{% endblock %}

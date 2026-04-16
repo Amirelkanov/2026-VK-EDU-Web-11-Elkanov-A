@@ -1,0 +1,32 @@
+{% load static %}
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex gap-3">
+
+      <div class="d-flex flex-column align-items-center gap-2 flex-shrink-0">
+        <div class="avatar-placeholder">{{ question.author|slice:":2"|upper }}</div>
+        <div class="vote-box">
+          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9650;</button>
+          <span class="vote-count">{{ question.rating|default:0 }}</span>
+          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9660;</button>
+        </div>
+      </div>
+
+      <div class="flex-grow-1">
+        <h3 class="fs-5 mb-2">
+          <a href="{% url 'questions:question' question.id %}" class="text-decoration-none">{{ question.title }}</a>
+        </h3>
+        <p class="text-secondary mb-2">{{ question.text|truncatewords:20 }}</p>
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <div>
+            <img src="{% static 'img/answer.svg' %}" alt="Answers" />
+            Answers <span class="text-muted small">({{ question.answers_count }})</span>
+          </div>
+          {% for tag in question.tags %}
+          <a href="{% url 'questions:tag' tag %}" class="tag">{{ tag }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
