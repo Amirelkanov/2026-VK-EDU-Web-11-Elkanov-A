@@ -1,15 +1,30 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=askme
+      - POSTGRES_USER=askme_user
+      - POSTGRES_PASSWORD=askme_password
+    ports:
+      - "5432:5432"
+
   web:
     build: .
+    command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
     volumes:
       - .:/app
       - media_volume:/app/media
     env_file:
-      - .env
+      - .env.docker
+    depends_on:
+      - db
 
 volumes:
   media_volume:
+  postgres_data:

@@ -4,9 +4,13 @@ from . import views
 app_name = "questions"
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("hot/", views.hot, name="hot"),
-    path("tag/<str:tag>/", views.tag_questions, name="tag"),
-    path("question/<int:question_id>/", views.question_detail, name="question"),
-    path("ask/", views.ask_question, name="ask"),
+    path("", views.IndexView.as_view(), name="index"),
+    path("hot/", views.HotView.as_view(), name="hot"),
+    path("tag/<str:tag>/", views.TagView.as_view(), name="tag"),
+    path(
+        "question/<int:question_id>/",
+        views.QuestionDetailView.as_view(),
+        name="question",
+    ),
+    path("ask/", views.AskQuestionView.as_view(), name="ask"),
 ]

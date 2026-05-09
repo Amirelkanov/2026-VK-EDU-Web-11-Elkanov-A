@@ -1,56 +1,45 @@
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from .auth import get_user, is_authenticated, login, logout
+from django.shortcuts import redirect
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from django.views import View
 
 
-@csrf_exempt
-def login_view(request):
-    if is_authenticated(request):
-        return redirect("questions:index")
+class LoginView(TemplateView):
+    template_name = "core/login.html"
 
-    if request.method == "POST":
-        login(request)
-        return redirect("questions:index")
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("questions:index")
+        return super().dispatch(request, *args, **kwargs)
 
-    return render(
-        request,
-        "core/login.html",
-    )
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
 
-@csrf_exempt
-def signup_view(request):
-    if is_authenticated(request):
-        return redirect("questions:index")
+class SignupView(TemplateView):
+    template_name = "core/signup.html"
 
-    if request.method == "POST":
-        login(request)
-        return redirect("questions:index")
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("questions:index")
+        return super().dispatch(request, *args, **kwargs)
 
-    return render(
-        request,
-        "core/signup.html",
-    )
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
 
-@csrf_exempt
-@require_POST
-def logout_view(request):
-    logout(request)
-    return redirect("core:login")
-
-
-def profile_view(request):
-    user = get_user(request)
-
-    if not user:
+class LogoutView(View):
+    def post(self, request, *args, **kwargs):
+        logout(request)
         return redirect("core:login")
 
-    return render(
-        request,
-        "core/profile.html",
-        {
-            "user": user,
-        },
-    )
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "core/profile.html"
+    login_url = "core:login"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["user"] = self.request.user
+        return context

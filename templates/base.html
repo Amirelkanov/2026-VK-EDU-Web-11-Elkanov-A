@@ -33,10 +33,10 @@
         <a href="{% url 'questions:ask' %}" class="btn btn-success flex-shrink-0">ASK!</a>
 
         <div class="d-flex align-items-center gap-2 ms-auto">
-          {% if user %}
+          {% if user.is_authenticated %}
           <!-- Authorized user -->
           <div class="d-flex align-items-center gap-2">
-            <div class="avatar-placeholder small">{{ user.nickname|slice:":2" }}</div>
+            <div class="avatar-placeholder small">{{ user.username|slice:":2"|upper }}</div>
 
             <div class="d-flex d-sm-none flex-column">
               <a href="{% url 'core:profile' %}" title="Settings">
@@ -52,7 +52,7 @@
           </div>
 
           <div class="d-none d-sm-block">
-            <div class="fw-semibold">{{ user.nickname }}</div>
+            <div class="fw-semibold">{{ user.username }}</div>
             <div class="d-flex gap-2 small align-items-center">
               <a href="{% url 'core:profile' %}" class="text-primary text-decoration-none">Settings</a>
               <form action="{% url 'core:logout' %}" method="post">
@@ -88,8 +88,8 @@
               <h2 class="fs-5 fw-bold mb-3">Popular tags</h2>
               <div class="d-flex flex-wrap gap-2">
                 {% for tag in popular_tags %}
-                <a href="{% url 'questions:tag' tag %}"
-                  class="tag{% if forloop.first or forloop.counter == 3 %} fw-semibold{% endif %}">{{ tag }}</a>
+                <a href="{% url 'questions:tag' tag.name %}"
+                  class="tag{% if forloop.first or forloop.counter == 3 %} fw-semibold{% endif %}">{{ tag.name }}</a>
                 {% endfor %}
               </div>
             </div>

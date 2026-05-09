@@ -1,11 +1,5 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
-from data.questions.mock_data import MOCK_TAGS
-
-
-def get_popular_tags(count=10):
-    return MOCK_TAGS[:count]
-
 
 def paginate(objects_list, request, per_page=10):
     paginator = Paginator(objects_list, per_page)

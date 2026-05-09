@@ -1,136 +1,106 @@
-from django.shortcuts import render
-from .utils import paginate, MOCK_TAGS
+from django.shortcuts import get_object_or_404
+from django.db.models import Count
+from django.views.generic import TemplateView
+from .utils import paginate
+from .models import Question, Tag
 
 
-def index(request):
-    questions = []
-    for i in range(1, 31):
-        questions.append(
+class IndexView(TemplateView):
+    template_name = "questions/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        questions = (
+            Question.objects.new()
+            .select_related("author")
+            .prefetch_related("tags")
+            .annotate(answers_count=Count("answers"))
+        )
+        page, paginator = paginate(questions, self.request, per_page=10)
+
+        context.update(
+            {"questions": page.object_list, "page": page, "paginator": paginator}
+        )
+        return context
+
+
+class HotView(TemplateView):
+    template_name = "questions/hot.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        questions = (
+            Question.objects.hot()
+            .select_related("author")
+            .prefetch_related("tags")
+            .annotate(answers_count=Count("answers"))
+        )
+        page, paginator = paginate(questions, self.request, per_page=10)
+
+        context.update(
+            {"questions": page.object_list, "page": page, "paginator": paginator}
+        )
+        return context
+
+
+class TagView(TemplateView):
+    template_name = "questions/tag.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        tag_name = self.kwargs.get("tag")
+        tag_obj = get_object_or_404(Tag, name=tag_name)
+        questions = (
+            Question.objects.by_tag(tag_name)
+            .select_related("author")
+            .prefetch_related("tags")
+            .annotate(answers_count=Count("answers"))
+        )
+        page, paginator = paginate(questions, self.request, per_page=10)
+
+        context.update(
             {
-                "id": i,
-                "title": f"Title {i}",
-                "text": f"Text {i}",
-                "author": f"User{i % 5 + 1}",
-                "answers_count": i * 2,
-                "tags": MOCK_TAGS[i % 3 : i % 3 + 2],
-                "rating": (i * 3) % 20 - 10,
+                "questions": page.object_list,
+                "page": page,
+                "paginator": paginator,
+                "tag": tag_obj,
             }
         )
-
-    page, paginator = paginate(questions, request, per_page=10)
-
-    return render(
-        request,
-        "questions/index.html",
-        {
-            "questions": page.object_list,
-            "page": page,
-            "paginator": paginator,
-        },
-    )
+        return context
 
 
-def hot(request):
-    questions = []
-    for i in range(1, 31):
-        questions.append(
+class QuestionDetailView(TemplateView):
+    template_name = "questions/question.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        question_id = self.kwargs.get("question_id")
+        question = get_object_or_404(
+            Question.objects.select_related("author")
+            .prefetch_related("tags")
+            .annotate(answers_count=Count("answers")),
+            pk=question_id,
+        )
+        answers = question.answers.select_related("author").order_by(
+            "-rating", "-created_at"
+        )
+        page, paginator = paginate(answers, self.request, per_page=3)
+
+        context.update(
             {
-                "id": i,
-                "title": f"Hottest Question {i}",
-                "text": f"Text {i}",
-                "author": f"User{i % 5 + 1}",
-                "answers_count": i * 5,
-                "tags": MOCK_TAGS[i % 2 : i % 2 + 2],
-                "rating": 100 - i,
+                "question": question,
+                "answers": page.object_list,
+                "answers_count": question.answers_count,
+                "page": page,
+                "paginator": paginator,
             }
         )
-
-    page, paginator = paginate(questions, request, per_page=10)
-
-    return render(
-        request,
-        "questions/hot.html",
-        {
-            "questions": page.object_list,
-            "page": page,
-            "paginator": paginator,
-        },
-    )
+        return context
 
 
-def tag_questions(request, tag):
-    questions = []
-    for i in range(1, 31):
-        questions.append(
-            {
-                "id": i,
-                "title": f"Question about {tag} #{i}",
-                "text": f"Text {i}",
-                "author": f"User{i % 5 + 1}",
-                "answers_count": i,
-                "tags": [tag, MOCK_TAGS[i % len(MOCK_TAGS)]],
-                "rating": (i * 7) % 25 - 5,
-            }
-        )
-
-    page, paginator = paginate(questions, request, per_page=10)
-
-    return render(
-        request,
-        "questions/tag.html",
-        {
-            "questions": page.object_list,
-            "page": page,
-            "paginator": paginator,
-            "tag": tag,
-        },
-    )
-
-
-def question_detail(request, question_id):
-
-    # Mock question data
-    question = {
-        "id": question_id,
-        "title": f"Question {question_id}",
-        "text": f"This is the full text of question {question_id}. " * 10,
-        "author": "User1",
-        "answers_count": 5,
-        "tags": ["python", "django"],
-        "rating": 5,
-    }
-
-    # Mock answers
-    answers = []
-    for i in range(1, 8):
-        answers.append(
-            {
-                "id": i,
-                "text": f"This is answer {i}. " * 5,
-                "author": f"User{i}",
-                "rating": i * 10 if i != 3 else 3,
-                "is_correct": i == 1,
-            }
-        )
-
-    page, paginator = paginate(answers, request, per_page=3)
-
-    return render(
-        request,
-        "questions/question.html",
-        {
-            "question": question,
-            "answers": page.object_list,
-            "answers_count": len(answers),
-            "page": page,
-            "paginator": paginator,
-        },
-    )
-
-
-def ask_question(request):
-    return render(
-        request,
-        "questions/ask.html",
-        {},
-    )
+class AskQuestionView(TemplateView):
+    template_name = "questions/ask.html"
