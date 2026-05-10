@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.db.models import Subquery, Sum, OuterRef
 from django.db.models.functions import Coalesce
+import pgtrigger
 from core.models import Profile
 from questions.models import Tag, Question, Answer, QuestionLike, AnswerLike
 from faker import Faker
@@ -120,11 +121,6 @@ class Command(BaseCommand):
             )
             for _ in range(ratio * 200)
         )
-        # Вы же простите меня за ignore_conflicts в угоду красоты кода?..
-        QuestionLike.objects.bulk_create(
-            question_likes_gen, batch_size=BATCH_SIZE, ignore_conflicts=True
-        )
-
         answer_likes_gen = (
             AnswerLike(
                 user_id=random.choice(user_ids),
@@ -133,11 +129,16 @@ class Command(BaseCommand):
             )
             for _ in range(ratio * 200)
         )
-        AnswerLike.objects.bulk_create(
-            answer_likes_gen, batch_size=BATCH_SIZE, ignore_conflicts=True
-        )
 
-        # Update ratings
+        with pgtrigger.ignore():
+            QuestionLike.objects.bulk_create(
+                question_likes_gen, batch_size=BATCH_SIZE, ignore_conflicts=True
+            )
+            AnswerLike.objects.bulk_create(
+                answer_likes_gen, batch_size=BATCH_SIZE, ignore_conflicts=True
+            )
+
+        # Update ratings separately in 1 query for performance
         self.stdout.write("Updating ratings...")
 
         likes_subquery = (
