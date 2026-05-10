@@ -14,7 +14,7 @@ POOL_SIZE = 100
 
 
 class Command(BaseCommand):
-    help = "Fills the database with mock data"
+    help = "Fills empty database with mock data"
 
     def add_arguments(self, parser):
         parser.add_argument("ratio", type=int, help="Ratio for data generation")
