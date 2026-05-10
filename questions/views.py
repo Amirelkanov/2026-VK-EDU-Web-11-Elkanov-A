@@ -3,6 +3,8 @@ from django.db.models import Count
 from django.views.generic import TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
+
+from questions.mixins import AnswersPaginationMixin
 from .utils import paginate
 from .models import Question, Tag
 from .forms import AskForm, AnswerForm
@@ -75,72 +77,50 @@ class TagView(TemplateView):
         return context
 
 
-class QuestionDetailView(View):
+class QuestionDetailView(AnswersPaginationMixin, View):
     template_name = "questions/question.html"
 
-    def get(self, request, *args, **kwargs):
-        question_id = self.kwargs.get("question_id")
-        question = get_object_or_404(
+    def get_question(self, question_id):
+        return get_object_or_404(
             Question.objects.select_related("author")
             .prefetch_related("tags")
             .annotate(answers_count=Count("answers")),
             pk=question_id,
         )
-        answers = question.answers.select_related("author").order_by(
-            "created_at", "-rating"
-        )
-        page, paginator = paginate(answers, self.request, per_page=3)
 
+    def get(self, request, *args, **kwargs):
+        question = self.get_question(kwargs["question_id"])
+        page, paginator = self.get_answers_page(question)
         form = AnswerForm()
 
-        context = {
-            "question": question,
-            "answers": page.object_list,
-            "answers_count": question.answers_count,
-            "page": page,
-            "paginator": paginator,
-            "form": form,
-        }
-        return render(request, self.template_name, context)
+        return render(
+            request,
+            self.template_name,
+            self.build_question_context(question, page, paginator, form),
+        )
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect(f"{reverse('core:login')}?next={request.path}")
 
-        question_id = self.kwargs.get("question_id")
-        question = get_object_or_404(Question, pk=question_id)
-
+        question = self.get_question(kwargs["question_id"])
         form = AnswerForm(request.POST)
+
         if form.is_valid():
+            # We assume that new answer on last page
             answer = form.save(author=request.user, question=question)
-            # Redirect to the last page of answers where the new answer is
             answers_count = question.answers.count()
-            per_page = 3
-            last_page = (answers_count - 1) // per_page + 1
+            last_page = (answers_count - 1) // self.answers_per_page + 1
             url = reverse("questions:question", kwargs={"question_id": question.id})
+
             return redirect(f"{url}?page={last_page}#answer-{answer.id}")
 
-        # If form is invalid, re-render the page with errors
-        question = get_object_or_404(
-            Question.objects.select_related("author")
-            .prefetch_related("tags")
-            .annotate(answers_count=Count("answers")),
-            pk=question_id,
+        page, paginator = self.get_answers_page(question)
+        return render(
+            request,
+            self.template_name,
+            self.build_question_context(question, page, paginator, form),
         )
-        answers = question.answers.select_related("author").order_by(
-            "created_at", "-rating"
-        )
-        page, paginator = paginate(answers, self.request, per_page=3)
-
-        context = {
-            "question": question,
-            "answers": page.object_list,
-            "answers_count": question.answers_count,
-            "page": page,
-            "paginator": paginator,
-            "form": form,
-        }
-        return render(request, self.template_name, context)
 
 
 class AskQuestionView(LoginRequiredMixin, View):
