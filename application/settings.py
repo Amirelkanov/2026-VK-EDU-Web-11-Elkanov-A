@@ -14,8 +14,11 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load .env.local for local development, docker compose provides env vars directly in Docker
+if Path(".env.local").exists():
+    load_dotenv(".env.local")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
