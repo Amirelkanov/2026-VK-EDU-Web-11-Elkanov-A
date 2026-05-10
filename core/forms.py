@@ -96,7 +96,7 @@ class ProfileForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=commit)
         if commit:
-            profile = Profile.objects.get(user=user)
+            profile, _ = Profile.objects.get_or_create(user=user)
             avatar = self.cleaned_data.get("avatar")
             if avatar:
                 profile.avatar = avatar
