@@ -45,8 +45,9 @@ class Command(BaseCommand):
         # Django Users
         self.stdout.write("Creating Django users...")
         fake_password = make_password("secretPasswords")
+        max_user_id = User.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
 
-        users = User.objects.bulk_create(
+        User.objects.bulk_create(
             (
                 User(
                     username=f"{fake.user_name()}_{i}",
@@ -57,8 +58,7 @@ class Command(BaseCommand):
             ),
             batch_size=BATCH_SIZE,
         )
-        user_ids = tuple(u.id for u in users)
-        del users
+        user_ids = tuple(User.objects.filter(id__gt=max_user_id).values_list("id", flat=True))
 
         # Profiles
         self.stdout.write("Creating profiles...")
@@ -69,16 +69,20 @@ class Command(BaseCommand):
 
         # Tags
         self.stdout.write("Creating tags...")
-        tags = Tag.objects.bulk_create(
+        max_tag_id = Tag.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+
+        Tag.objects.bulk_create(
             (Tag(name=f"{fake.word().lower()}_{i}") for i in range(ratio)),
             batch_size=BATCH_SIZE,
+            ignore_conflicts=True,
         )
-        tag_ids = tuple(t.id for t in tags)
-        del tags
+        tag_ids = tuple(Tag.objects.filter(id__gt=max_tag_id).values_list("id", flat=True))
 
         # Questions
         self.stdout.write("Creating questions...")
-        questions = Question.objects.bulk_create(
+        max_question_id = Question.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+
+        Question.objects.bulk_create(
             (
                 Question(
                     title=random.choice(titles_pool),
@@ -90,8 +94,7 @@ class Command(BaseCommand):
             ),
             batch_size=BATCH_SIZE,
         )
-        question_ids = tuple(q.id for q in questions)
-        del questions
+        question_ids = tuple(Question.objects.filter(id__gt=max_question_id).values_list("id", flat=True))
 
         # Add tags to questions (3 for each) - only for newly created questions
         self.stdout.write("Adding tags to questions...")
@@ -108,7 +111,9 @@ class Command(BaseCommand):
 
         # Answers
         self.stdout.write("Creating answers...")
-        answers = Answer.objects.bulk_create(
+        max_answer_id = Answer.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+
+        Answer.objects.bulk_create(
             (
                 Answer(
                     # Only 1 correct among 10
@@ -122,8 +127,7 @@ class Command(BaseCommand):
             ),
             batch_size=BATCH_SIZE,
         )
-        answer_ids = tuple(a.id for a in answers)
-        del answers
+        answer_ids = tuple(Answer.objects.filter(id__gt=max_answer_id).values_list("id", flat=True))
 
         # Likes
         self.stdout.write("Creating likes...")
