@@ -6,14 +6,14 @@
 
 ### Заполнение базы данных тестовыми данными
 
-Для заполнения **новой** БД тестовыми данными используйте команду `fill_db`:
+Для заполнения БД тестовыми данными используйте команду `fill_db`:
 
 ```
 usage: manage.py fill_db [-h] [--seed SEED] [--version] [-v {0,1,2,3}] [--settings SETTINGS] [--pythonpath PYTHONPATH]
                          [--traceback] [--no-color] [--force-color] [--skip-checks]
                          ratio
 
-Fills empty database with mock data
+Fills database with mock data
 
 positional arguments:
   ratio                 Ratio for data generation

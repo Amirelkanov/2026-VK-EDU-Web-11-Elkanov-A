@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db import models
 from django.contrib.auth.hashers import make_password
 from django.db.models import Subquery, Sum, OuterRef
 from django.db.models.functions import Coalesce
@@ -13,7 +14,7 @@ POOL_SIZE = 100
 
 
 class Command(BaseCommand):
-    help = "Fills empty database with mock data"
+    help = "Fills database with mock data"
 
     def add_arguments(self, parser):
         parser.add_argument("ratio", type=int, help="Ratio for data generation")
@@ -41,12 +42,16 @@ class Command(BaseCommand):
         texts_pool = tuple(fake.text(max_nb_chars=200) for _ in range(POOL_SIZE))
         answer_texts_pool = tuple(fake.text(max_nb_chars=100) for _ in range(POOL_SIZE))
 
-        # Django Users
+        # Django Users - start from max existing user_id + 1
         self.stdout.write("Creating Django users...")
         fake_password = make_password("secretPasswords")
 
+        max_user_id = User.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+        start_id = max_user_id + 1
+
         users_gen = (
             User(
+                id=start_id + i,
                 username=f"{fake.user_name()}_{i}",
                 email=f"{i}_{fake.email()}",
                 password=fake_password,
@@ -55,7 +60,7 @@ class Command(BaseCommand):
         )
         User.objects.bulk_create(users_gen, batch_size=BATCH_SIZE)
 
-        user_ids = tuple(User.objects.values_list("id", flat=True))
+        user_ids = tuple(User.objects.filter(id__gte=start_id).values_list("id", flat=True))
 
         # Profiles
         self.stdout.write("Creating profiles from Django users...")
@@ -91,7 +96,7 @@ class Command(BaseCommand):
             for q_id in question_ids
             for t_id in random.sample(tag_ids, 3)
         )
-        QuestionTags.objects.bulk_create(question_tags_gen, batch_size=BATCH_SIZE)
+        QuestionTags.objects.bulk_create(question_tags_gen, batch_size=BATCH_SIZE, ignore_conflicts=True)
 
         # Answers
         self.stdout.write("Creating answers...")
