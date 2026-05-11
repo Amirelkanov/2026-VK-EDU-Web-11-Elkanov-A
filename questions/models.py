@@ -7,7 +7,7 @@ LIKE_CHOICES = (
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Название")
+    name = models.SlugField(max_length=50, unique=True, verbose_name="Название")
 
     class Meta:
         verbose_name = "Тег"

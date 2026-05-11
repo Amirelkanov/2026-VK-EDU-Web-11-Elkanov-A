@@ -64,7 +64,7 @@ class Command(BaseCommand):
 
         # Tags
         self.stdout.write("Creating tags...")
-        tags_gen = (Tag(name=f"{fake.word()}_{i}") for i in range(ratio))
+        tags_gen = (Tag(name=f"{fake.word().lower()}_{i}") for i in range(ratio))
         Tag.objects.bulk_create(tags_gen, batch_size=BATCH_SIZE)
         tag_ids = tuple(Tag.objects.values_list("id", flat=True))
 

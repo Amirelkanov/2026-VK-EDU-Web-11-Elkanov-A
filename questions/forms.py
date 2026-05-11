@@ -26,14 +26,9 @@ class AskForm(forms.ModelForm):
     def clean_tags(self):
         tags_str = self.cleaned_data.get("tags", "")
         tag_names = [t.strip() for t in tags_str.split(",") if t.strip()]
-        max_length = Tag._meta.get_field("name").max_length
+        tag_name_field = Tag._meta.get_field("name")
         for tag_name in tag_names:
-            if " " in tag_name:
-                raise forms.ValidationError("Tags cannot contain spaces")
-            if len(tag_name) > max_length:
-                raise forms.ValidationError(
-                    f"Tag is too long (max {max_length} characters)"
-                )
+            tag_name_field.run_validators(tag_name)
         return tags_str
 
     def save(self, commit=True, author=None):
