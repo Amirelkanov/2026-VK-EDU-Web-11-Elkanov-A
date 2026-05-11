@@ -58,6 +58,7 @@ class Command(BaseCommand):
             batch_size=BATCH_SIZE,
         )
         user_ids = tuple(u.id for u in users)
+        del users
 
         # Profiles
         self.stdout.write("Creating profiles...")
@@ -73,6 +74,7 @@ class Command(BaseCommand):
             batch_size=BATCH_SIZE,
         )
         tag_ids = tuple(t.id for t in tags)
+        del tags
 
         # Questions
         self.stdout.write("Creating questions...")
@@ -89,6 +91,7 @@ class Command(BaseCommand):
             batch_size=BATCH_SIZE,
         )
         question_ids = tuple(q.id for q in questions)
+        del questions
 
         # Add tags to questions (3 for each) - only for newly created questions
         self.stdout.write("Adding tags to questions...")
@@ -120,6 +123,7 @@ class Command(BaseCommand):
             batch_size=BATCH_SIZE,
         )
         answer_ids = tuple(a.id for a in answers)
+        del answers
 
         # Likes
         self.stdout.write("Creating likes...")
