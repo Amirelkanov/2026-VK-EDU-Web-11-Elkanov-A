@@ -34,3 +34,9 @@ if settings.DEBUG:
     urlpatterns += [
         path("__debug__/", include(debug_toolbar.urls)),
     ]
+
+# NOTE: Custom error handlers work when DEBUG=False
+handler400 = "core.views.handler400"
+handler403 = "core.views.handler403"
+handler404 = "core.views.handler404"
+handler500 = "core.views.handler500"
