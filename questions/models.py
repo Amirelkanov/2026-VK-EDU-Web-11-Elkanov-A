@@ -1,4 +1,3 @@
-import pgtrigger
 from django.db import models
 
 LIKE_CHOICES = (
@@ -31,7 +30,7 @@ class QuestionManager(models.Manager):
 
 class Question(models.Model):
     title = models.CharField(max_length=255, verbose_name="Заголовок")
-    text = models.TextField(verbose_name="Текст")
+    text = models.TextField(max_length=10000, verbose_name="Текст")
     author = models.ForeignKey(
         "auth.User", on_delete=models.CASCADE, related_name="questions", verbose_name="Автор"
     )
@@ -50,7 +49,7 @@ class Question(models.Model):
 
 
 class Answer(models.Model):
-    text = models.TextField(verbose_name="Текст")
+    text = models.TextField(max_length=10000, verbose_name="Текст")
     question = models.ForeignKey(
         "Question",
         on_delete=models.CASCADE,
@@ -88,41 +87,6 @@ class QuestionLike(models.Model):
         verbose_name = "Лайк вопроса"
         verbose_name_plural = "Лайки вопросов"
         unique_together = ("user", "question")
-        triggers = [
-            pgtrigger.Trigger(
-                name="update_rating_on_insert",
-                operation=pgtrigger.Insert,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_question "
-                    "SET rating = rating + NEW.value "
-                    "WHERE id = NEW.question_id; "
-                    "RETURN NEW;"
-                ),
-            ),
-            pgtrigger.Trigger(
-                name="update_rating_on_update",
-                operation=pgtrigger.Update,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_question "
-                    "SET rating = rating - OLD.value + NEW.value "
-                    "WHERE id = NEW.question_id; "
-                    "RETURN NEW;"
-                ),
-            ),
-            pgtrigger.Trigger(
-                name="update_rating_on_delete",
-                operation=pgtrigger.Delete,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_question "
-                    "SET rating = rating - OLD.value "
-                    "WHERE id = OLD.question_id; "
-                    "RETURN OLD;"
-                ),
-            ),
-        ]
 
     def __str__(self):
         return f"{self.user.username} -> {self.question.title} ({self.value})"
@@ -144,41 +108,6 @@ class AnswerLike(models.Model):
         verbose_name = "Лайк ответа"
         verbose_name_plural = "Лайки ответов"
         unique_together = ("user", "answer")
-        triggers = [
-            pgtrigger.Trigger(
-                name="update_rating_on_insert",
-                operation=pgtrigger.Insert,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_answer "
-                    "SET rating = rating + NEW.value "
-                    "WHERE id = NEW.answer_id; "
-                    "RETURN NEW;"
-                ),
-            ),
-            pgtrigger.Trigger(
-                name="update_rating_on_update",
-                operation=pgtrigger.Update,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_answer "
-                    "SET rating = rating - OLD.value + NEW.value "
-                    "WHERE id = NEW.answer_id; "
-                    "RETURN NEW;"
-                ),
-            ),
-            pgtrigger.Trigger(
-                name="update_rating_on_delete",
-                operation=pgtrigger.Delete,
-                when=pgtrigger.After,
-                func=pgtrigger.Func(
-                    "UPDATE questions_answer "
-                    "SET rating = rating - OLD.value "
-                    "WHERE id = OLD.answer_id; "
-                    "RETURN OLD;"
-                ),
-            ),
-        ]
 
     def __str__(self):
         return f"{self.user.username} -> Ответ {self.answer.pk} ({self.value})"
