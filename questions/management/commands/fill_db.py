@@ -75,6 +75,8 @@ class Command(BaseCommand):
 
         # Questions
         self.stdout.write("Creating questions...")
+        max_question_id = Question.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+
         questions_gen = (
             Question(
                 title=random.choice(titles_pool),
@@ -85,9 +87,9 @@ class Command(BaseCommand):
             for i in range(ratio * 10)
         )
         Question.objects.bulk_create(questions_gen, batch_size=BATCH_SIZE)
-        question_ids = tuple(Question.objects.values_list("id", flat=True))
+        question_ids = tuple(Question.objects.filter(id__gt=max_question_id).values_list("id", flat=True))
 
-        # Add tags to questions (3 for each)
+        # Add tags to questions (3 for each) - only for newly created questions
         self.stdout.write("Adding tags to questions...")
         QuestionTags = Question.tags.through
 
@@ -100,6 +102,8 @@ class Command(BaseCommand):
 
         # Answers
         self.stdout.write("Creating answers...")
+        max_answer_id = Answer.objects.aggregate(max_id=models.Max("id"))["max_id"] or 0
+
         answers_gen = (
             # Only 1 correct among 10
             Answer(
@@ -112,7 +116,7 @@ class Command(BaseCommand):
             for i in range(ratio * 100)
         )
         Answer.objects.bulk_create(answers_gen, batch_size=BATCH_SIZE)
-        answer_ids = tuple(Answer.objects.values_list("id", flat=True))
+        answer_ids = tuple(Answer.objects.filter(id__gt=max_answer_id).values_list("id", flat=True))
 
         # Likes
         self.stdout.write("Creating likes...")
@@ -141,7 +145,7 @@ class Command(BaseCommand):
             answer_likes_gen, batch_size=BATCH_SIZE, ignore_conflicts=True
         )
 
-        # Update ratings separately in 1 query for performance
+        # Update ratings separately in 1 query for performance - only for new entities
         self.stdout.write("Updating ratings...")
 
         likes_subquery = (
@@ -150,7 +154,7 @@ class Command(BaseCommand):
             .annotate(total=Sum("value"))
             .values("total")
         )
-        Question.objects.update(rating=Coalesce(Subquery(likes_subquery), 0))
+        Question.objects.filter(id__in=question_ids).update(rating=Coalesce(Subquery(likes_subquery), 0))
 
         answer_likes_subquery = (
             AnswerLike.objects.filter(answer_id=OuterRef("pk"))
@@ -158,6 +162,6 @@ class Command(BaseCommand):
             .annotate(total=Sum("value"))
             .values("total")
         )
-        Answer.objects.update(rating=Coalesce(Subquery(answer_likes_subquery), 0))
+        Answer.objects.filter(id__in=answer_ids).update(rating=Coalesce(Subquery(answer_likes_subquery), 0))
 
         self.stdout.write(self.style.SUCCESS("Successfully filled DB!"))
