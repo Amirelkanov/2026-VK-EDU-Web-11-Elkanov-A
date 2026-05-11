@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Count
+from django.shortcuts import get_object_or_404
 
 LIKE_CHOICES = (
     (1, "Like"),
@@ -6,8 +8,15 @@ LIKE_CHOICES = (
 )
 
 
+class TagManager(models.Manager):
+    def by_name(self, name):
+        return get_object_or_404(self, name=name)
+
+
 class Tag(models.Model):
     name = models.SlugField(max_length=50, unique=True, verbose_name="Название")
+
+    objects = TagManager()
 
     class Meta:
         verbose_name = "Тег"
@@ -18,21 +27,46 @@ class Tag(models.Model):
 
 
 class QuestionManager(models.Manager):
+    def _with_relations(self):
+        return self.select_related("author").prefetch_related("tags")
+
     def hot(self):
-        return self.order_by("-rating", "-created_at")
+        return (
+            self._with_relations()
+            .annotate(answers_count=Count("answers"))
+            .order_by("-rating", "-created_at")
+        )
 
     def new(self):
-        return self.order_by("-created_at")
+        return (
+            self._with_relations()
+            .annotate(answers_count=Count("answers"))
+            .order_by("-created_at")
+        )
 
     def by_tag(self, tag_name):
-        return self.filter(tags__name=tag_name).order_by("-created_at")
+        return (
+            self._with_relations()
+            .annotate(answers_count=Count("answers"))
+            .filter(tags__name=tag_name)
+            .order_by("-created_at")
+        )
+
+    def by_id(self, question_id):
+        return get_object_or_404(
+            self._with_relations().annotate(answers_count=Count("answers")),
+            pk=question_id,
+        )
 
 
 class Question(models.Model):
     title = models.CharField(max_length=255, verbose_name="Заголовок")
     text = models.TextField(max_length=10000, verbose_name="Текст")
     author = models.ForeignKey(
-        "auth.User", on_delete=models.CASCADE, related_name="questions", verbose_name="Автор"
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="questions",
+        verbose_name="Автор",
     )
     tags = models.ManyToManyField("Tag", related_name="questions", verbose_name="Теги")
     rating = models.IntegerField(default=0, verbose_name="Рейтинг")
@@ -57,7 +91,10 @@ class Answer(models.Model):
         verbose_name="Вопрос",
     )
     author = models.ForeignKey(
-        "auth.User", on_delete=models.CASCADE, related_name="answers", verbose_name="Автор"
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="answers",
+        verbose_name="Автор",
     )
     is_correct = models.BooleanField(default=False, verbose_name="Правильный ответ")
     rating = models.IntegerField(default=0, verbose_name="Рейтинг")
@@ -79,7 +116,10 @@ class QuestionLike(models.Model):
         verbose_name="Пользователь",
     )
     question = models.ForeignKey(
-        "Question", on_delete=models.CASCADE, related_name="likes", verbose_name="Вопрос"
+        "Question",
+        on_delete=models.CASCADE,
+        related_name="likes",
+        verbose_name="Вопрос",
     )
     value = models.SmallIntegerField(choices=LIKE_CHOICES, verbose_name="Значение")
 

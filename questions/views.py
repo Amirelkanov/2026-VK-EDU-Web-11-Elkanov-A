@@ -1,5 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect
-from django.db.models import Count
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
@@ -16,12 +15,7 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        questions = (
-            Question.objects.new()
-            .select_related("author")
-            .prefetch_related("tags")
-            .annotate(answers_count=Count("answers"))
-        )
+        questions = Question.objects.new()
         page, paginator = paginate(questions, self.request, per_page=10)
 
         context.update(
@@ -36,12 +30,7 @@ class HotView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        questions = (
-            Question.objects.hot()
-            .select_related("author")
-            .prefetch_related("tags")
-            .annotate(answers_count=Count("answers"))
-        )
+        questions = Question.objects.hot()
         page, paginator = paginate(questions, self.request, per_page=10)
 
         context.update(
@@ -57,13 +46,8 @@ class TagView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         tag_name = self.kwargs.get("tag")
-        tag_obj = get_object_or_404(Tag, name=tag_name)
-        questions = (
-            Question.objects.by_tag(tag_name)
-            .select_related("author")
-            .prefetch_related("tags")
-            .annotate(answers_count=Count("answers"))
-        )
+        tag_obj = Tag.objects.by_name(tag_name)
+        questions = Question.objects.by_tag(tag_name)
         page, paginator = paginate(questions, self.request, per_page=10)
 
         context.update(
@@ -80,16 +64,8 @@ class TagView(TemplateView):
 class QuestionDetailView(AnswersPaginationMixin, View):
     template_name = "questions/question.html"
 
-    def get_question(self, question_id):
-        return get_object_or_404(
-            Question.objects.select_related("author")
-            .prefetch_related("tags")
-            .annotate(answers_count=Count("answers")),
-            pk=question_id,
-        )
-
     def get(self, request, *args, **kwargs):
-        question = self.get_question(kwargs["question_id"])
+        question = Question.objects.by_id(kwargs["question_id"])
         page, paginator = self.get_answers_page(question)
         form = AnswerForm()
 
@@ -103,7 +79,7 @@ class QuestionDetailView(AnswersPaginationMixin, View):
         if not request.user.is_authenticated:
             return redirect(f"{reverse('core:login')}?next={request.path}")
 
-        question = self.get_question(kwargs["question_id"])
+        question = Question.objects.by_id(kwargs["question_id"])
         form = AnswerForm(request.POST)
 
         if form.is_valid():
