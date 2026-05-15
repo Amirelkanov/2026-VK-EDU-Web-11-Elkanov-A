@@ -2,10 +2,8 @@ from django.db import models
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
-LIKE_CHOICES = (
-    (1, "Like"),
-    (-1, "Dislike"),
-)
+from questions.utils import LIKE_CHOICES
+from django.db import transaction
 
 
 class TagManager(models.Manager):
@@ -27,6 +25,15 @@ class Tag(models.Model):
 
 
 class QuestionManager(models.Manager):
+    def get_user_votes(self, questions, user):
+        if not user.is_authenticated or not questions:
+            return {}
+        question_ids = [q.id for q in questions]
+        likes = QuestionLike.objects.filter(
+            user=user, question_id__in=question_ids
+        ).values_list("question_id", "value")
+        return dict(likes)
+
     def _with_relations(self):
         return self.select_related("author").prefetch_related("tags")
 
@@ -82,6 +89,20 @@ class Question(models.Model):
         return self.title
 
 
+class AnswerManager(models.Manager):
+    def get_user_votes(self, answers, user):
+        if not user.is_authenticated or not answers:
+            return {}
+        answer_ids = [a.id for a in answers]
+        likes = AnswerLike.objects.filter(
+            user=user, answer_id__in=answer_ids
+        ).values_list("answer_id", "value")
+        return dict(likes)
+
+    def mark_correct(self, answer, is_correct):
+        self.filter(pk=answer.pk).update(is_correct=bool(is_correct))
+
+
 class Answer(models.Model):
     text = models.TextField(max_length=10000, verbose_name="Текст")
     question = models.ForeignKey(
@@ -100,12 +121,44 @@ class Answer(models.Model):
     rating = models.IntegerField(default=0, verbose_name="Рейтинг")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
+    objects = AnswerManager()
+
     class Meta:
         verbose_name = "Ответ"
         verbose_name_plural = "Ответы"
 
     def __str__(self):
         return f'Ответ от {self.author.username} на "{self.question.title}"'
+
+
+class QuestionLikeManager(models.Manager):
+    def toggle_like(self, user, question, value):
+        with transaction.atomic():
+            question = Question.objects.select_for_update().get(pk=question.pk)
+            like, created = self.select_for_update().get_or_create(
+                user=user, question=question, defaults={"value": value}
+            )
+
+            rating_delta = 0
+            if not created:
+                if like.value == value:
+                    like.delete()
+                    user_vote = 0
+                    rating_delta = -value
+                else:
+                    rating_delta = value - like.value
+                    like.value = value
+                    like.save(update_fields=["value"])
+                    user_vote = value
+            else:
+                user_vote = value
+                rating_delta = value
+
+            if rating_delta != 0:
+                question.rating += rating_delta
+                question.save(update_fields=["rating"])
+
+            return question.rating, user_vote
 
 
 class QuestionLike(models.Model):
@@ -123,6 +176,8 @@ class QuestionLike(models.Model):
     )
     value = models.SmallIntegerField(choices=LIKE_CHOICES, verbose_name="Значение")
 
+    objects = QuestionLikeManager()
+
     class Meta:
         verbose_name = "Лайк вопроса"
         verbose_name_plural = "Лайки вопросов"
@@ -130,6 +185,36 @@ class QuestionLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} -> {self.question.title} ({self.value})"
+
+
+class AnswerLikeManager(models.Manager):
+    def toggle_like(self, user, answer, value):
+        with transaction.atomic():
+            answer = Answer.objects.select_for_update().get(pk=answer.pk)
+            like, created = self.select_for_update().get_or_create(
+                user=user, answer=answer, defaults={"value": value}
+            )
+
+            rating_delta = 0
+            if not created:
+                if like.value == value:
+                    like.delete()
+                    user_vote = 0
+                    rating_delta = -value
+                else:
+                    rating_delta = value - like.value
+                    like.value = value
+                    like.save(update_fields=["value"])
+                    user_vote = value
+            else:
+                user_vote = value
+                rating_delta = value
+
+            if rating_delta != 0:
+                answer.rating += rating_delta
+                answer.save(update_fields=["rating"])
+
+            return answer.rating, user_vote
 
 
 class AnswerLike(models.Model):
@@ -143,6 +228,8 @@ class AnswerLike(models.Model):
         "Answer", on_delete=models.CASCADE, related_name="likes", verbose_name="Ответ"
     )
     value = models.SmallIntegerField(choices=LIKE_CHOICES, verbose_name="Значение")
+
+    objects = AnswerLikeManager()
 
     class Meta:
         verbose_name = "Лайк ответа"

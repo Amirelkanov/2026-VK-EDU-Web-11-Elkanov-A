@@ -1,0 +1,11 @@
+{% load static %}
+{% with size=avatar_size|default:"md" %}
+{% if avatar_user.profile.avatar %}
+<img src="{{ avatar_user.profile.avatar.url }}" alt="{{ avatar_user.username }}" class="avatar {{ size }}"
+  style="object-fit: cover;" />
+{% else %}
+<div class="avatar {{ size }}">
+  {{ avatar_user.username|slice:":2"|upper }}
+</div>
+{% endif %}
+{% endwith %}

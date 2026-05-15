@@ -14,9 +14,10 @@
   <link rel="stylesheet" href="{% static 'css/layout.css' %}" />
   <link rel="stylesheet" href="{% static 'css/components.css' %}" />
   <link rel="stylesheet" href="{% static 'css/tags.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/avatar.css' %}" />
 </head>
 
-<body>
+<body data-user-auth="{% if user.is_authenticated %}1{% else %}0{% endif %}" data-login-url="{% url 'core:login' %}">
   <!-- Header -->
   <header class="bg-white border-bottom shadow-sm">
     <div class="container py-2">
@@ -40,7 +41,7 @@
           {% if user.is_authenticated %}
           <!-- Authorized user -->
           <div class="d-flex align-items-center gap-2">
-            <div class="avatar-placeholder small">{{ user.username|slice:":2"|upper }}</div>
+            {% include "avatar.html" with avatar_user=user avatar_size="sm" %}
 
             <div class="d-flex d-sm-none flex-column">
               <a href="{% url 'core:profile' %}" title="Settings">
@@ -130,6 +131,7 @@
   </footer>
 
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+  <script type="module" src="{% static 'js/main.js' %}"></script>
 </body>
 
 </html>

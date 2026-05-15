@@ -1,0 +1,16 @@
+<div class="vote-box" data-vote-box data-vote-url="{{ vote_url }}"
+  data-target-id="{{ target_id }}" data-user-vote="{{ user_vote|default:0 }}">
+  {% if user.is_authenticated %}
+  <button type="button"
+    class="btn btn-sm btn-outline-secondary p-1 lh-1 {% if user_vote == 1 %}active{% endif %}"
+    data-vote-value="1" aria-label="Like">&#9650;</button>
+  <span class="vote-count">{{ rating|default:0 }}</span>
+  <button type="button"
+    class="btn btn-sm btn-outline-secondary p-1 lh-1 {% if user_vote == -1 %}active{% endif %}"
+    data-vote-value="-1" aria-label="Dislike">&#9660;</button>
+  {% else %}
+  <button class="btn btn-sm btn-outline-secondary p-1 lh-1" disabled title="Log in to vote">&#9650;</button>
+  <span class="vote-count">{{ rating|default:0 }}</span>
+  <button class="btn btn-sm btn-outline-secondary p-1 lh-1" disabled title="Log in to vote">&#9660;</button>
+  {% endif %}
+</div>

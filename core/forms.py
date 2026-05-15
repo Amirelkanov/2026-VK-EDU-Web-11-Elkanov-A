@@ -3,8 +3,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 
 from core.models import Profile
+from core.utils import ALLOWED_AVATAR_EXTENSIONS, MAX_AVATAR_SIZE_MB
 
 
 class LoginForm(forms.Form):
@@ -77,8 +79,16 @@ class ProfileForm(forms.ModelForm):
     avatar = forms.ImageField(
         label="Avatar",
         required=False,
-        widget=forms.FileInput(attrs={"class": "form-control"}),
-        disabled=True,
+        widget=forms.FileInput(
+            attrs={
+                "class": "form-control",
+                "accept": "image/*",
+            }
+        ),
+        help_text=(
+            f"Allowed: {', '.join(ALLOWED_AVATAR_EXTENSIONS)}. "
+            f"Max size: {MAX_AVATAR_SIZE_MB} MB."
+        ),
     )
 
     class Meta:
@@ -98,9 +108,7 @@ class ProfileForm(forms.ModelForm):
         if commit:
             profile, _ = Profile.objects.get_or_create(user=user)
             avatar = self.cleaned_data.get("avatar")
-            if avatar:
+            if isinstance(avatar, UploadedFile):
                 profile.avatar = avatar
-            elif "avatar" in self.changed_data and not avatar:
-                profile.avatar = None
-            profile.save()
+                profile.save()
         return user
