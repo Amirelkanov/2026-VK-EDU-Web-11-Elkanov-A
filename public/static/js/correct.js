@@ -25,6 +25,7 @@ export async function onCorrectClick(event) {
     return;
   }
 
+  // Disable input during request
   input.disabled = true;
   const payload = { question_id: questionId, answer_id: answerId };
   if (newValue) payload.is_correct = "on";
