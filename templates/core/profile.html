@@ -7,33 +7,45 @@
 <h1 class="fs-3 fw-bold mb-4">Settings: {{ user.username }}</h1>
 <form method="post" action="{% url 'core:profile' %}" enctype="multipart/form-data" class="d-flex flex-column gap-3">
   {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {% for error in form.non_field_errors %}
+    {{ error }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div class="row align-items-center">
-    <label class="col-sm-3 col-form-label">Login</label>
+    <label class="col-sm-3 col-form-label">{{ form.username.label }}</label>
     <div class="col-sm-6">
-      <input type="text" class="form-control" name="login" value="{{ user.username }}" />
+      {{ form.username }}
+      {% if form.username.errors %}
+      <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+      {% endif %}
     </div>
   </div>
 
   <div class="row align-items-center">
-    <label class="col-sm-3 col-form-label">Email</label>
+    <label class="col-sm-3 col-form-label">{{ form.email.label }}</label>
     <div class="col-sm-6">
-      <input type="email" class="form-control" name="email" value="{{ user.email }}" />
-    </div>
-  </div>
-
-  <div class="row align-items-center">
-    <label class="col-sm-3 col-form-label">NickName</label>
-    <div class="col-sm-6">
-      <input type="text" class="form-control" name="nickname" value="{{ user.username }}" />
+      {{ form.email }}
+      {% if form.email.errors %}
+      <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+      {% endif %}
     </div>
   </div>
 
   <div class="row align-items-start">
-    <label class="col-sm-3 col-form-label">Upload avatar</label>
+    <label class="col-sm-3 col-form-label">{{ form.avatar.label }}</label>
     <div class="col-sm-6 d-flex flex-column gap-2">
-      <div class="avatar-placeholder fs-4">{{ user.username|slice:":2"|upper }}</div>
-
-      <input type="file" class="form-control" name="avatar" accept="image/*" disabled />
+      {% include "avatar.html" with avatar_user=user avatar_size="lg" %}
+      {{ form.avatar }}
+      {% if form.avatar.help_text %}
+      <div class="form-text">{{ form.avatar.help_text }}</div>
+      {% endif %}
+      {% if form.avatar.errors %}
+      <div class="text-danger small mt-1">{{ form.avatar.errors.0 }}</div>
+      {% endif %}
     </div>
   </div>
 

@@ -4,23 +4,17 @@
 {% block title %}{{ question.title }} - AskPupkin{% endblock %}
 
 {% block content %}
-<!-- Question -->
 <div class="mb-3">
   <div class="d-flex gap-3">
-    <!-- Avatar + vote -->
     <div class="d-flex flex-column align-items-center gap-2 flex-shrink-0">
-      <div class="avatar-placeholder fs-4">{{ question.author.username|slice:":2"|upper }}</div>
-      <div class="vote-box">
-        <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9650;</button>
-        <span class="vote-count">{{ question.rating }}</span>
-        <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9660;</button>
-      </div>
+      {% include "avatar.html" with avatar_user=question.author avatar_size="lg" %}
+      {% url 'questions:vote_question' as vote_url %}
+      {% include "vote_box.html" with target_id=question.id vote_url=vote_url rating=question.rating user_vote=question.user_vote %}
     </div>
 
-    <!-- Question body -->
-    <div class="flex-grow-1">
-      <h1 class="fs-4 fw-bold mb-2">{{ question.title }}</h1>
-      <p class="mb-3">
+    <div class="flex-grow-1 overflow-hidden">
+      <h1 class="fs-4 fw-bold mb-2 text-break">{{ question.title }}</h1>
+      <p class="mb-3 text-break">
         {{ question.text }}
       </p>
       <div class="d-flex flex-wrap gap-1">
@@ -39,23 +33,22 @@
   <h2 class="fs-5">{{ answers_count }} Answers</h2>
 
   {% for answer in answers %}
-  <div class="card border shadow-sm p-3">
+  <div class="card border shadow-sm p-3" id="answer-{{ answer.id }}">
     <div class="d-flex gap-3">
       <div class="d-flex flex-column align-items-center gap-2 flex-shrink-0">
-        <div class="avatar-placeholder">{{ answer.author.username|slice:":2"|upper }}</div>
-        <div class="vote-box">
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9650;</button>
-          <span class="vote-count">{{ answer.rating }}</span>
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9660;</button>
-        </div>
+        {% include "avatar.html" with avatar_user=answer.author %}
+        {% url 'questions:vote_answer' as vote_url %}
+        {% include "vote_box.html" with target_id=answer.id vote_url=vote_url rating=answer.rating user_vote=answer.user_vote %}
       </div>
       <div class="flex-grow-1">
-        <p class="mb-3">
+        <p class="mb-3 text-break">
           {{ answer.text }}
         </p>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" {% if answer.is_correct %}checked{% endif %} disabled
-            id="correct{{ answer.id }}" />
+
+        <div class="form-check" data-correct-wrapper data-mark-correct-url="{% url 'questions:mark_correct' %}"
+          data-question-id="{{ question.id }}" data-answer-id="{{ answer.id }}">
+          <input class="form-check-input" type="checkbox" {% if answer.is_correct %}checked{% endif %}
+            id="correct{{ answer.id }}" {% if not is_question_author %}disabled{% endif %} />
           <label class="form-check-label fw-semibold" for="correct{{ answer.id }}">Correct!</label>
         </div>
       </div>
@@ -72,10 +65,32 @@
 
 <hr />
 
-<form method="post" action="">
-  <div class="mb-3">
-    <textarea class="form-control" name="answer" rows="5" placeholder="Enter your answer here.."></textarea>
+<form method="post" action="{% url 'questions:question' question.id %}">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {% for error in form.non_field_errors %}
+    {{ error }}
+    {% endfor %}
   </div>
+  {% endif %}
+
+  <div class="mb-3">
+    {% if user.is_authenticated %}
+    {{ form.text }}
+    {% if form.text.errors %}
+    <div class="text-danger small mt-1">{{ form.text.errors.0 }}</div>
+    {% endif %}
+    {% else %}
+    <textarea class="form-control" name="text" rows="3" placeholder="Log in to write an answer..." disabled
+      title="Log in to write an answer"></textarea>
+    {% endif %}
+  </div>
+  {% if user.is_authenticated %}
   <button type="submit" class="btn btn-primary">Answer</button>
+  {% else %}
+  <button type="submit" class="btn btn-primary" disabled title="Log in to write an answer">Answer</button>
+  {% endif %}
 </form>
 {% endblock %}

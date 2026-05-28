@@ -1,7 +1,6 @@
 asgiref==3.11.1
 Django==5.2.12
 django-debug-toolbar==6.3.0
-django-pgtrigger==4.17.0
 Faker==40.15.0
 pillow==12.2.0
 psycopg2-binary==2.9.11
