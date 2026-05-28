@@ -14,7 +14,11 @@
 
 {% for question in questions %}
 {% include 'question_card.html' %}
+{% empty %}
+<div class="alert alert-info">No questions with this tag yet.</div>
 {% endfor %}
 
+{% if questions %}
 {% include 'pagination.html' %}
+{% endif %}
 {% endblock %}

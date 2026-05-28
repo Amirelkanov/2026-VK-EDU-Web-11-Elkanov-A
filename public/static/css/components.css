@@ -1,18 +1,7 @@
-.avatar-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 4em;
-  height: 4em;
-  min-width: 4em;
-  background-color: lightgray;
-  border-radius: 0.5em;
-
-  color: gray;
-
-  font-weight: 600;
-  text-transform: uppercase;
+.vote-box [data-vote-value].active {
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
 }
 
 .vote-box {

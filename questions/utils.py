@@ -1,11 +1,10 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import JsonResponse
 
-from data.questions.mock_data import MOCK_TAGS
-
-
-def get_popular_tags(count=10):
-    return MOCK_TAGS[:count]
-
+LIKE_CHOICES = (
+    (1, "Like"),
+    (-1, "Dislike"),
+)
 
 def paginate(objects_list, request, per_page=10):
     paginator = Paginator(objects_list, per_page)
@@ -25,3 +24,8 @@ def paginate(objects_list, request, per_page=10):
         paginated_page = paginator.page(paginator.num_pages)
 
     return paginated_page, paginator
+
+def json_error(message, status=400, **extra):
+    payload = {"ok": False, "error": message}
+    payload.update(extra)
+    return JsonResponse(payload, status=status)

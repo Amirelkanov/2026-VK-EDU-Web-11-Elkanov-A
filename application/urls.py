@@ -28,4 +28,15 @@ urlpatterns = [
 
 # Serve media files in development
 if settings.DEBUG:
+    import debug_toolbar
+
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
+
+# NOTE: Custom error handlers work when DEBUG=False
+handler400 = "core.views.handler400"
+handler403 = "core.views.handler403"
+handler404 = "core.views.handler404"
+handler500 = "core.views.handler500"

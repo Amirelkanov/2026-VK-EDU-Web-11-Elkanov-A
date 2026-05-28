@@ -7,17 +7,35 @@
 
 <form method="post" action="{% url 'core:login' %}" class="d-flex flex-column gap-3">
   {% csrf_token %}
+  {% if request.GET.next %}
+  <input type="hidden" name="next" value="{{ request.GET.next }}">
+  {% endif %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {% for error in form.non_field_errors %}
+    {{ error }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div class="row align-items-center">
-    <label class="col-sm-3 col-form-label">Login</label>
+    <label class="col-sm-3 col-form-label">{{ form.username.label }}</label>
     <div class="col-sm-6">
-      <input type="text" class="form-control" name="login" placeholder="Enter your login here" />
+      {{ form.username }}
+      {% if form.username.errors %}
+      <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+      {% endif %}
     </div>
   </div>
 
   <div class="row align-items-center">
-    <label class="col-sm-3 col-form-label">Password</label>
+    <label class="col-sm-3 col-form-label">{{ form.password.label }}</label>
     <div class="col-sm-6">
-      <input type="password" class="form-control" name="password" />
+      {{ form.password }}
+      {% if form.password.errors %}
+      <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+      {% endif %}
     </div>
   </div>
 
