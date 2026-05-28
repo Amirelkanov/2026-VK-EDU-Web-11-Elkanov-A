@@ -4,18 +4,9 @@
     <div class="d-flex gap-3">
 
       <div class="d-flex flex-column align-items-center gap-2 flex-shrink-0">
-        <div class="avatar-placeholder">{{ question.author.username|slice:":2"|upper }}</div>
-        <div class="vote-box">
-          {% if user.is_authenticated %}
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9650;</button>
-          <span class="vote-count">{{ question.rating|default:0 }}</span>
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1">&#9660;</button>
-          {% else %}
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1" disabled title="Log in to vote">&#9650;</button>
-          <span class="vote-count">{{ question.rating|default:0 }}</span>
-          <button class="btn btn-sm btn-outline-secondary p-1 lh-1" disabled title="Log in to vote">&#9660;</button>
-          {% endif %}
-        </div>
+        {% include "avatar.html" with avatar_user=question.author %}
+        {% url 'questions:vote_question' as vote_url %}
+        {% include "vote_box.html" with target_id=question.id vote_url=vote_url rating=question.rating user_vote=question.user_vote %}
       </div>
 
       <div class="flex-grow-1 overflow-hidden">

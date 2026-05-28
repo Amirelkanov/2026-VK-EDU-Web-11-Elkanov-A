@@ -1,0 +1,36 @@
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: lightgray;
+  border-radius: 0.5em;
+
+  color: gray;
+
+  font-weight: 600;
+  text-transform: uppercase;
+
+  overflow: hidden;
+}
+
+.avatar.sm {
+  width: 3em;
+  height: 3em;
+  min-width: 3em;
+
+  font-size: 0.875em;
+}
+
+.avatar.md {
+  width: 4em;
+  height: 4em;
+  min-width: 4em;
+}
+
+.avatar.lg {
+  width: 5em;
+  height: 5em;
+  min-width: 5em;
+  font-size: 1.25em;
+}

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Question, Answer, Tag
+from .models import Question, Answer, Tag, LIKE_CHOICES
 
 
 class AskForm(forms.ModelForm):
@@ -69,3 +69,17 @@ class AnswerForm(forms.ModelForm):
         if commit:
             answer.save()
         return answer
+
+
+class VoteForm(forms.Form):
+    target_id = forms.IntegerField(min_value=1)
+    value = forms.TypedChoiceField(
+        choices=[(str(v), label) for v, label in LIKE_CHOICES],
+        coerce=int,
+    )
+
+
+class MarkCorrectForm(forms.Form):
+    question_id = forms.IntegerField(min_value=1)
+    answer_id = forms.IntegerField(min_value=1)
+    is_correct = forms.BooleanField(required=False)
